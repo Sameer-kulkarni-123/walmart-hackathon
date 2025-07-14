@@ -1,73 +1,186 @@
-import { useState } from 'react';
+import React, { useState, useRef, useEffect } from "react";
+import aiResponses from "./aiResponses.json";
 
-interface Message {
-  from: 'bot' | 'user';
-  text: string;
-}
-
-interface ChatbotSidebarProps {
+interface ChatSidePanelProps {
+  isOpen: boolean;
   onClose: () => void;
 }
 
-export default function ChatbotSidebar({ onClose }: ChatbotSidebarProps) {
-  const [messages, setMessages] = useState<Message[]>([
-    { from: 'bot', text: 'Hi! How can I assist you today?' },
-  ]);
-  const [input, setInput] = useState<string>('');
+interface Message {
+  text: string;
+  sender: "user" | "ai";
+}
 
-  const sendMessage = () => {
-    if (!input.trim()) return;
+const ChatSidePanel: React.FC<ChatSidePanelProps> = ({ isOpen, onClose }) => {
+  const [messages, setMessages] = useState<Message[]>(
+    [{ text: "Hi AI!", sender: "user" },
+    { text: aiResponses[0], sender: "ai" }]
+  );
+  const [input, setInput] = useState<string>("");
+  const [responseIndex, setResponseIndex] = useState<number>(1);
+  const responseIndexRef = useRef<number>(responseIndex);
+  const [listening, setListening] = useState<boolean>(false);
+  const recognitionRef = useRef<any>(null);
 
-    const newMessage: Message = { from: 'user', text: input };
-    setMessages([...messages, newMessage]);
+  useEffect(() => {
+    responseIndexRef.current = responseIndex;
+  }, [responseIndex]);
 
-    // Simulated bot response
-    setTimeout(() => {
-      setMessages((prev) => [
-        ...prev,
-        { from: 'bot', text: "Sorry, I'm just a mock assistant for now!" },
-      ]);
-    }, 800);
+  // Improved TTS for initial AI response
+  useEffect(() => {
+    if (isOpen) {
+      const synth = window.speechSynthesis;
+      const speakInitial = () => {
+        if (messages.length === 2 && messages[1].sender === "ai") {
+          speak(messages[1].text);
+        }
+      };
+      if (synth && typeof synth.onvoiceschanged !== "undefined") {
+        synth.onvoiceschanged = speakInitial;
+      } else {
+        speakInitial();
+      }
+    }
+    // eslint-disable-next-line
+  }, [isOpen, messages]);
 
-    setInput('');
+  const speak = (text: string) => {
+    if ("speechSynthesis" in window) {
+      const synth = window.speechSynthesis;
+      let voices = synth.getVoices();
+      // Try to select a more natural/enhanced voice
+      let selectedVoice = voices.find(v => v.lang === "en-US" && v.name.toLowerCase().includes("google") && v.name.toLowerCase().includes("wave"));
+      if (!selectedVoice) {
+        selectedVoice = voices.find(v => v.lang === "en-US" && v.name.toLowerCase().includes("google"));
+      }
+      if (!selectedVoice) {
+        selectedVoice = voices.find(v => v.lang === "en-US" && v.name.toLowerCase().includes("enhanced"));
+      }
+      if (!selectedVoice) {
+        selectedVoice = voices.find(v => v.lang === "en-US" && v.name.toLowerCase().includes("female"));
+      }
+      if (!selectedVoice) {
+        selectedVoice = voices.find(v => v.lang === "en-US");
+      }
+      const utter = new window.SpeechSynthesisUtterance(text);
+      utter.lang = "en-US";
+      if (selectedVoice) utter.voice = selectedVoice;
+      utter.rate = 1;
+      utter.pitch = 1.1;
+      utter.volume = 1;
+      synth.speak(utter);
+    }
   };
 
+  const handleSend = (msg: string = input) => {
+    if (!msg.trim()) return;
+
+    let nextIndex = responseIndexRef.current;
+    let aiMsg: Message | null = null;
+    if (nextIndex < aiResponses.length) {
+      aiMsg = { text: aiResponses[nextIndex], sender: "ai" };
+      nextIndex++;
+    }
+    setMessages((prevMessages) => aiMsg ? [...prevMessages, { text: msg, sender: "user" }, aiMsg] : [...prevMessages, { text: msg, sender: "user" }]);
+    setInput("");
+    if (aiMsg) {
+      setResponseIndex(nextIndex);
+      responseIndexRef.current = nextIndex;
+      speak(aiMsg.text);
+    }
+  };
+
+  const handleMicClick = () => {
+    if (!("webkitSpeechRecognition" in window || "SpeechRecognition" in window)) {
+      alert("Speech recognition not supported in this browser.");
+      return;
+    }
+
+    const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+
+    if (!recognitionRef.current) {
+      recognitionRef.current = new SpeechRecognition();
+      recognitionRef.current.continuous = false;
+      recognitionRef.current.interimResults = false;
+      recognitionRef.current.lang = "en-US";
+
+      recognitionRef.current.onresult = (event: any) => {
+        const transcript = event.results[0][0].transcript;
+
+        let nextIndex = responseIndexRef.current;
+        let aiMsg: Message | null = null;
+        if (nextIndex < aiResponses.length) {
+          aiMsg = { text: aiResponses[nextIndex], sender: "ai" };
+          nextIndex++;
+        }
+        setMessages((prevMessages) => aiMsg ? [...prevMessages, { text: transcript, sender: "user" }, aiMsg] : [...prevMessages, { text: transcript, sender: "user" }]);
+        setInput("");
+        if (aiMsg) {
+          setResponseIndex(nextIndex);
+          responseIndexRef.current = nextIndex;
+          speak(aiMsg.text);
+        }
+
+        setListening(false);
+        setInput("");
+      };
+
+      recognitionRef.current.onerror = () => {
+        setListening(false);
+      };
+
+      recognitionRef.current.onend = () => {
+        setListening(false);
+      };
+    }
+
+    setListening(true);
+    recognitionRef.current.start();
+  };
+
+  if (!isOpen) return null;
+
   return (
-    <div className="fixed right-0 top-0 h-full w-80 bg-white border-l border-gray-300 shadow-lg z-50 flex flex-col">
-      <div className="flex items-center justify-between p-4 border-b">
-        <h2 className="text-lg font-semibold">AI Assistant</h2>
-        <button onClick={onClose} className="text-red-500 font-bold text-lg">×</button>
+    <div className="fixed top-0 right-0 h-full w-90 bg-white shadow-lg z-50 flex flex-col">
+      <div className="flex justify-between items-center p-4 border-b">
+        <h2 className="text-lg font-bold">Chat with AI</h2>
+        <button onClick={onClose} className="text-gray-500 hover:text-gray-800">✕</button>
       </div>
-      <div className="flex-1 overflow-y-auto p-4 bg-gray-50 space-y-2">
+      <div className="flex-1 p-4 overflow-y-auto">
         {messages.map((msg, idx) => (
-          <div
-            key={idx}
-            className={`text-sm ${
-              msg.from === 'bot'
-                ? 'text-left text-blue-600'
-                : 'text-right text-green-600'
-            }`}
-          >
-            {msg.text}
+          <div key={idx} className={`mb-2 flex ${msg.sender === "user" ? "justify-end" : "justify-start"}`}>
+            <span className={`inline-block px-3 py-2 rounded-lg ${msg.sender === "user" ? "bg-blue-100 text-blue-800" : "bg-gray-100 text-gray-800"}`}>
+              {msg.text}
+            </span>
           </div>
         ))}
       </div>
-      <div className="p-4 border-t flex gap-2">
+      <div className="p-4 border-t flex">
         <input
           type="text"
-          className="flex-1 border px-2 py-1 rounded"
-          placeholder="Ask me something..."
+          className="flex-1 border rounded-l px-3 py-2 text-black bg-white"
+          placeholder="Type your message..."
           value={input}
           onChange={(e) => setInput(e.target.value)}
-          onKeyDown={(e) => e.key === 'Enter' && sendMessage()}
+          onKeyDown={(e) => { if (e.key === "Enter") handleSend(); }}
         />
         <button
-          className="bg-blue-600 text-white px-3 py-1 rounded"
-          onClick={sendMessage}
+          className={`bg-gray-200 text-black px-3 py-2 border-l border-r ${listening ? "animate-pulse" : ""}`}
+          style={{ borderRadius: 0 }}
+          title={listening ? "Listening..." : "Speak"}
+          onClick={handleMicClick}
+          disabled={listening}
         >
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-6 h-6">
+            <path strokeLinecap="round" strokeLinejoin="round" d="M12 18v3m0 0h-3m3 0h3m-3-3a6 6 0 006-6V9a6 6 0 10-12 0v3a6 6 0 006 6z" />
+          </svg>
+        </button>
+        <button className="bg-[#0071dc] text-white px-4 py-2 rounded-r" onClick={() => handleSend()} disabled={listening}>
           Send
         </button>
       </div>
     </div>
   );
-}
+};
+
+export default ChatSidePanel;
