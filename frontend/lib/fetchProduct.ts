@@ -1,37 +1,39 @@
 import { ProductContent } from "@/typings/productTypings";
 
-async function fetchProduct(url: string) {
+async function fetchProduct(productId: string) {
   const username = process.env.OXYLABS_USERNAME;
   const password = process.env.OXYLABS_PASSWORD;
-  const newUrl = new URL(`https://www.walmart.com${url}`);
-  console.log("Scraping >>> ", newUrl.toString());
+
   const body = {
-    source: "universal_ecommerce",
-    url: newUrl.toString(),
-    geo_location: "United States",
+    source: "walmart_product",
     parse: true,
+    product_id: productId,
   };
 
-  const response = await fetch("https://realtime.oxylabs.io/v1/queries", {
-    method: "post",
-    body: JSON.stringify(body),
-    headers: {
-      "Content-Type": "application/json",
-      Authorization:
-        "Basic " + Buffer.from(`${username}:${password}`).toString("base64"),
-    },
-    next: {
-      revalidate: 60 * 60 * 24 * 365, // refresh the cache after a year
-    },
-  })
-    .then((response) => response.json())
-    .then((data) => {
-      if (data.results.length === 0) return;
-      const result: ProductContent = data.results[0];
-      const product = result.content;
-      return product;
-    })
-    .catch((err) => console.log(err));
-  return response;
+  try {
+    const res = await fetch("https://realtime.oxylabs.io/v1/queries", {
+      method: "POST",
+      body: JSON.stringify(body),
+      headers: {
+        "Content-Type": "application/json",
+        Authorization:
+          "Basic " + Buffer.from(`${username}:${password}`).toString("base64"),
+      },
+      next: {
+        revalidate: 60 * 60 * 24 * 365, // 1 year cache
+      },
+    });
+
+    const data = await res.json();
+
+    if (!data?.results?.length) return;
+
+    const result: ProductContent = data.results[0];
+    return result.content;
+  } catch (err) {
+    console.error("Failed to fetch product:", err);
+    return null;
+  }
 }
+
 export default fetchProduct;

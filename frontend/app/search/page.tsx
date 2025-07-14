@@ -1,5 +1,6 @@
 import Product from "@/components/Product";
 import fetchSearch from "@/lib/fetchSearch";
+import Link from "next/link";
 
 type Props = {
   searchParams: {
@@ -20,7 +21,16 @@ async function SearchPage({ searchParams: { q } }: Props) {
       <ul className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
         {results?.content.results?.map((product, index) => (
           <li key={product.general?.product_id || index}>
-            <Product product={product} />
+            <Link
+              href={{
+                pathname: "/product",
+                query: {
+                  id: product.general.product_id,
+                },
+              }}
+            >
+              <Product product={product} />
+            </Link>
           </li>
         ))}
       </ul>
