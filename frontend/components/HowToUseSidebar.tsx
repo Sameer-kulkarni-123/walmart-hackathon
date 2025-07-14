@@ -53,18 +53,44 @@ const HowToUseSidebar: React.FC<HowToUseSidebarProps> = ({ isOpen, onClose, prod
   if (!isOpen || !product) return null;
 
   return (
-    <div className="absolute top-0 right-0 h-full w-full max-w-[30vw] bg-white shadow-lg z-50 flex flex-col animate-slide-in">
-      <div className="flex justify-between items-center p-4 border-b bg-walmart text-white">
-        <h2 className="text-lg font-bold">How to Use: {product.title}</h2>
-        <button onClick={onClose} className="text-white hover:text-gray-200 text-2xl">✕</button>
+    <div className="absolute top-0 right-0 h-full w-full max-w-[30vw] bg-white shadow-2xl z-50 flex flex-col animate-slide-in rounded-l-2xl border-l border-blue-200">
+      <div className="flex items-center justify-between p-5 bg-gradient-to-r from-[#e3f0ff] via-[#6ec1e4] to-[#ffe600] rounded-t-2xl">
+        <div className="flex items-center gap-2">
+          <img
+            src="https://1000logos.net/wp-content/uploads/2017/05/Walmart-logo.png"
+            alt="Walmart"
+            className="h-7 w-7 drop-shadow bg-white rounded"
+            style={{ objectFit: "contain" }}
+            onError={e => {
+              (e.target as HTMLImageElement).src = "https://upload.wikimedia.org/wikipedia/commons/3/3e/Walmart_logo.svg";
+            }}
+          />
+          <h2 className="text-lg font-bold text-black">
+            How to Use:{" "}
+            <span className="font-normal text-black">{product.title}</span>
+          </h2>
+        </div>
+        <button
+          onClick={onClose}
+          className="text-white bg-[#0071dc] hover:bg-[#ffe600] hover:text-[#0071dc] rounded-lg p-2 transition-colors duration-200 text-2xl focus:outline-none focus:ring-2 focus:ring-[#ffe600]"
+          aria-label="Close sidebar"
+        >
+          ✕
+        </button>
       </div>
-      <div className="flex-1 p-6 overflow-y-auto">
+      <div className="flex-1 p-6 overflow-y-auto bg-white hide-scrollbar">
         {loading ? (
-          <div className="text-center text-walmart font-semibold">Loading instructions...</div>
+          <div className="flex flex-col items-center justify-center h-full">
+            <svg className="animate-spin h-8 w-8 text-blue-400 mb-3" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z" />
+            </svg>
+            <span className="text-blue-700 font-semibold">Loading instructions...</span>
+          </div>
         ) : (
           messages.map((msg, idx) => (
-            <div key={idx} className={`mb-2 flex ${msg.sender === "user" ? "justify-end" : "justify-start"}`}>
-              <span className={`inline-block px-3 py-2 rounded-lg ${msg.sender === "user" ? "bg-blue-100 text-blue-800" : "bg-gray-100 text-gray-800"}`}>
+            <div key={idx} className="mb-4">
+              <span className="block bg-[#f7fafc] shadow px-4 py-3 rounded-xl text-gray-800 text-base leading-relaxed whitespace-pre-line">
                 <ReactMarkdown>{msg.text.replace(/\\n/g, "\n")}</ReactMarkdown>
               </span>
             </div>
@@ -79,9 +105,15 @@ const HowToUseSidebar: React.FC<HowToUseSidebarProps> = ({ isOpen, onClose, prod
           from { transform: translateX(100%); }
           to { transform: translateX(0); }
         }
+        .hide-scrollbar {
+          scrollbar-width: none; /* Firefox */
+        }
+        .hide-scrollbar::-webkit-scrollbar {
+          display: none; /* Chrome, Safari, Opera */
+        }
       `}</style>
     </div>
   );
 };
 
-export default HowToUseSidebar; 
+export default HowToUseSidebar;
