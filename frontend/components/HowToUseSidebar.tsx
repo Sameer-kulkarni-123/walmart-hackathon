@@ -24,13 +24,14 @@ const HowToUseSidebar: React.FC<HowToUseSidebarProps> = ({ isOpen, onClose, prod
     setMessages([]);
     const prompt = `You are a helpful Walmart assistant. The user has just bought the following product from Walmart.\n\nProduct Name: ${product?.title}\nDescription: ${product?.description}\n\nPlease provide clear, step-by-step instructions on how to use this product after purchase. Make it concise, friendly, and easy to follow. Use bullet points or short steps. Do not include markdown, links, or unnecessary styling. Only provide the instructions.`;
     try {
+      const GEMINI_API_KEY = process.env.NEXT_PUBLIC_GEMINI_API_KEY || "";
       const res = await fetch(
         "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent",
         {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
-            "X-goog-api-key": "AIzaSyCldPlHrXsPyOLDOx1Z-9dwjaUH0bxrRQQ",
+            "X-goog-api-key": GEMINI_API_KEY,
           },
           body: JSON.stringify({
             contents: [
