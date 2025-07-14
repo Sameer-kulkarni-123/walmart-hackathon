@@ -11,82 +11,93 @@ export interface SearchResult {
   status_code: number;
   parser_type: string;
 }
+
 export interface Result {
   content: Content;
+  created_at: string;
+  updated_at: string;
+  page: number;
+  url: string;
+  job_id: string;
+  status_code: number;
+  parser_type: string;
 }
+
 export interface Content {
   url: string;
-  organic: Organic[];
-  total_results: number;
-  last_visible_page: number;
+  results: Product[]; // was 'organic' earlier
+  facets?: Facet[];
+  location?: Location;
+  page_details: PageDetails;
   parse_status_code: number;
 }
-export interface Organic {
-  url: string;
-  image: string;
+
+export interface Product {
   price: Price;
-  title: string;
   rating: Rating;
   seller: Seller;
-  product_id: string;
-  badge?: string;
+  general: General;
   variants?: Variant[];
+  fulfillment?: Fulfillment;
 }
+
 export interface Price {
   price: number;
   currency: string;
 }
+
 export interface Rating {
   count: number;
   rating: number;
 }
+
 export interface Seller {
+  id?: string;
   name: string;
 }
+
+export interface General {
+  pos: number;
+  url: string;
+  image: string;
+  title: string;
+  sponsored: boolean;
+  product_id: string;
+  out_of_stock: boolean;
+  section_title: string;
+}
+
 export interface Variant {
   url: string;
   title: string;
+  image: string;
   product_id: string;
 }
-export interface Context {
-  key: string;
-  value: any;
+
+export interface Fulfillment {
+  pickup: boolean;
+  delivery: boolean;
+  shipping: boolean;
+  free_shipping: boolean;
 }
-export interface Link {
-  rel: string;
-  href: string;
-  method: string;
+
+export interface PageDetails {
+  page: number;
+  total_results: number;
+  last_visible_page: number;
 }
-// Defining jobs and context related interfaces
-export interface Job {
-  callback_url: string;
-  client_id: number;
-  context: Context[];
-  created_at: string;
-  domain: string;
-  geo_location: null | string;
-  id: string;
-  limit: number;
-  locale: null | string;
-  pages: number;
-  parse: boolean;
-  parser_type: null | string;
-  parsing_instructions: null | string;
-  browser_instructions: null | string;
-  render: null | boolean;
-  url: string;
-  query: string;
-  source: string;
-  start_page: number;
-  status: string;
-  storage_type: null | string;
-  storage_url: null | string;
-  subdomain: string;
-  content_encoding: string;
-  updated_at: string;
-  user_agent_type: string;
-  session_info: null | string;
-  statuses: any[];
-  client_notes: null | string;
-  _links: Link[];
+
+export interface Facet {
+  type: string;
+  values: {
+    name: string;
+  }[];
+  display_name: string;
+}
+
+export interface Location {
+  city: string;
+  state: string;
+  zipcode: string;
+  store_id: string;
 }

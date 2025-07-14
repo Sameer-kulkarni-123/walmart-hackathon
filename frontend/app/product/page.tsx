@@ -12,7 +12,6 @@ import { Badge } from "@/components/ui/badge";
 import {
   Table,
   TableBody,
-  TableCaption,
   TableCell,
   TableHead,
   TableHeader,
@@ -22,22 +21,29 @@ import AddToCart from "@/components/AddToCart";
 
 type Props = {
   searchParams: {
-    url: string;
+    id: string; // product_id passed as query param
   };
 };
 
-async function ProductPage({ searchParams: { url } }: Props) {
-  const product = await fetchProduct(url);
+async function ProductPage({ searchParams: { id } }: Props) {
+  const product = await fetchProduct(id);
   if (!product) return notFound();
+
+  const general = product.general;
+  const priceInfo = product.price;
+  const rating = product.rating;
+  const specs = product.specifications || [];
+  const breadcrumbs = product.breadcrumbs || [];
 
   return (
     <div className="p-4 lg:p-10 flex flex-col lg:flex-row w-full">
-      <div className="hidden lg:inline space-y-4">
-        {product.images.map((image, i) => (
+      {/* Sidebar Thumbnails */}
+      <div className="hidden lg:flex flex-col space-y-4">
+        {general.images?.map((image, i) => (
           <Image
-            key={image}
+            key={image + i}
             src={image}
-            alt={product.title + " " + i}
+            alt={`${general.title} ${i}`}
             width={90}
             height={90}
             className="border rounded-sm"
@@ -45,23 +51,22 @@ async function ProductPage({ searchParams: { url } }: Props) {
         ))}
       </div>
 
+      {/* Carousel */}
       <Carousel
-        opts={{
-          loop: true,
-        }}
-        className="w-3/5 mb-10 lg:mb-0 lg:w-full self-start flex items-center max-w-xl mx-auto lg:mx-20"
+        opts={{ loop: true }}
+        className="w-full max-w-xl mx-auto mb-10 lg:mb-0 lg:mx-20"
       >
         <CarouselContent>
-          {product.images.map((image, i) => (
+          {general.images?.map((image, i) => (
             <CarouselItem key={i}>
               <div className="p-1">
                 <div className="flex aspect-square items-center justify-center p-2 relative">
                   <Image
-                    key={image}
                     src={image}
-                    alt={product.title + " " + i}
+                    alt={`${general.title} ${i}`}
                     width={400}
                     height={400}
+                    className="object-contain"
                   />
                 </div>
               </div>
@@ -72,40 +77,34 @@ async function ProductPage({ searchParams: { url } }: Props) {
         <CarouselNext />
       </Carousel>
 
+      {/* Product Details */}
       <div className="flex-1 border rounded-md w-full p-5 space-y-5">
-        <h1 className="text-3xl font-bold">{product.title}</h1>
+        <h1 className="text-3xl font-bold">{general.title}</h1>
 
-        <div className="space-x-2">
-          {product.breadcrumbs.map((breadcrumb, i) => (
-            <Badge
-              key={breadcrumb + i}
-              className={breadcrumb}
-              variant="outline"
-            >
-              {breadcrumb}
-            </Badge>
+        <div className="space-x-2 flex flex-wrap">
+          {breadcrumbs.map((breadcrumb: any, i: number) => (
+            <Badge key={i}>{breadcrumb.category_name || breadcrumb}</Badge>
           ))}
         </div>
 
         <div
-          dangerouslySetInnerHTML={{ __html: product.description }}
-          className="py-5"
+          dangerouslySetInnerHTML={{
+            __html: general.description || "<p>No description available.</p>",
+          }}
+          className="py-5 text-gray-700"
         />
 
-        {product.rating && (
+        {rating && (
           <p className="text-yellow-500 text-sm">
-            {product.rating.rating} ★
-            <span className="text-gray-400 ml-2">
-              ({product.rating.count} reviews)
-            </span>
+            {rating.rating} ★
+            <span className="text-gray-400 ml-2">({rating.count} reviews)</span>
           </p>
         )}
 
         <p className="text-2xl font-bold mt-2">
-          {product?.currency} {product.price}
+          {priceInfo.currency} {priceInfo.price}
         </p>
 
-        {/* Add to Cart Button */}
         <AddToCart product={product} />
 
         <hr />
@@ -115,12 +114,12 @@ async function ProductPage({ searchParams: { url } }: Props) {
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead className="">Specification</TableHead>
+              <TableHead>Specification</TableHead>
               <TableHead>Value</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
-            {product.specifications.map((spec) => (
+            {specs.map((spec: any) => (
               <TableRow key={spec.key}>
                 <TableCell className="font-bold">{spec.key}</TableCell>
                 <TableCell>{spec.value}</TableCell>

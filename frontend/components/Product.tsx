@@ -1,40 +1,50 @@
-import { Organic } from "@/typings/searchTypings";
-import Image from "next/image";
-import Link from "next/link";
-import React from "react";
-import { Badge } from "./ui/badge";
+"use client";
 
-function Product({ product }: { product: Organic }) {
+import { Product as ProductType } from "@/typings/searchTypings";
+import AddToCart from "@/components/AddToCart";
+import { mapSearchProductToCartProduct } from "@/lib/mapSearchProductToCartProduct";
+type Props = {
+  product: ProductType;
+};
+
+function Product({ product }: Props) {
+  const { general, price, rating, seller } = product;
+
   return (
-    <Link
-      href={{
-        pathname: "/product",
-        query: { url: product.url },
-      }}
-      className="flex flex-col relative border rounded-md h-full p-5"
-    >
-      <Image
-        src={product.image}
-        alt={product.title}
-        width={200}
-        height={200}
-        className="mx-auto"
-      />
-      <p className="text-xl font-bold">
-        {product.price?.currency}
-        {product.price.price}
-      </p>
-      {product.badge && (
-        <Badge className="w-fit absolute top-2 right-2">{product.badge}</Badge>
-      )}
-      <p className="font-light">{product.title}</p>
-      {product.rating && (
-        <p className="text-yellow-500 text-sm">
-          {product.rating.rating}★
-          <span className="text-gray-400 ml-2">({product.rating.count})</span>
-        </p>
-      )}
-    </Link>
+    <div className="flex flex-col h-full border p-4 rounded-2xl shadow-md hover:shadow-lg transition bg-white">
+      {/* Image */}
+      <div className="w-full h-48 flex items-center justify-center mb-4">
+        <img
+          src={general.image}
+          alt={general.title}
+          className="max-h-full object-contain"
+        />
+      </div>
+
+      {/* Info */}
+      <div className="flex flex-col flex-grow justify-between">
+        <div className="mb-2">
+          <h3 className="font-semibold text-base line-clamp-2">
+            {general.title}
+          </h3>
+          <p className="text-sm text-gray-500">{seller?.name}</p>
+        </div>
+
+        <div className="mt-auto space-y-2">
+          <div>
+            <p className="text-green-600 font-bold text-lg">
+              ${price.price.toFixed(2)}
+            </p>
+            <p className="text-yellow-500 text-sm">
+              ⭐ {rating.rating} ({rating.count})
+            </p>
+          </div>
+
+          {/* Add to Cart Button */}
+          <AddToCart product={mapSearchProductToCartProduct(product)} />
+        </div>
+      </div>
+    </div>
   );
 }
 
