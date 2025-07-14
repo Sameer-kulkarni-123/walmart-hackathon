@@ -16,7 +16,7 @@ const nextConfig = {
       },
       {
         protocol: "https",
-        hostname: "content.syndigo.com",
+        hostname: "i8.walmartimages.com",
       },
       {
         protocol: "https",

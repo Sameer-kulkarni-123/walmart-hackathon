@@ -24,13 +24,8 @@ function Header() {
   };
   return (
     <header className="flex flex-col md:flex-row bg-walmart items-center px-10 py-7 space-x-5">
-      <Link href="/" className="mb-5 md:mb-0">
-        <Image
-          src="https://i5.walmartimages.com/dfw/63fd9f59-b3e1/7a569e53-f29a-4c3d-bfaf-6f7a158bfadd/v1/walmartLogo.svg"
-          alt="Walmart logo"
-          width={150}
-          height={150}
-        />
+      <Link href="/" className="mb-5 md:mb-0 text-white text-3xl font-bold">
+        Walmart
       </Link>
       <form
         onSubmit={handleSubmit}
