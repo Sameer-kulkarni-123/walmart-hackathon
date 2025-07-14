@@ -1,40 +1,28 @@
-import { Organic } from "@/typings/searchTypings";
-import Image from "next/image";
-import Link from "next/link";
-import React from "react";
-import { Badge } from "./ui/badge";
+"use client";
 
-function Product({ product }: { product: Organic }) {
+import { Product as ProductType } from "@/typings/searchTypings";
+
+type Props = {
+  product: ProductType;
+};
+
+function Product({ product }: Props) {
+  const { general, price, rating, seller } = product;
+
   return (
-    <Link
-      href={{
-        pathname: "/product",
-        query: { url: product.url },
-      }}
-      className="flex flex-col relative border rounded-md h-full p-5"
-    >
-      <Image
-        src={product.image}
-        alt={product.title}
-        width={200}
-        height={200}
-        className="mx-auto"
+    <div className="border p-4 rounded-xl shadow-md hover:shadow-lg transition">
+      <img
+        src={general.image}
+        alt={general.title}
+        className="w-full h-48 object-contain mb-4"
       />
-      <p className="text-xl font-bold">
-        {product.price?.currency}
-        {product.price.price}
+      <h3 className="font-semibold text-lg">{general.title}</h3>
+      <p className="text-sm text-gray-600">{seller?.name}</p>
+      <p className="mt-2 text-green-600 font-bold">${price.price}</p>
+      <p className="text-yellow-500 text-sm">
+        ⭐ {rating.rating} ({rating.count})
       </p>
-      {product.badge && (
-        <Badge className="w-fit absolute top-2 right-2">{product.badge}</Badge>
-      )}
-      <p className="font-light">{product.title}</p>
-      {product.rating && (
-        <p className="text-yellow-500 text-sm">
-          {product.rating.rating}★
-          <span className="text-gray-400 ml-2">({product.rating.count})</span>
-        </p>
-      )}
-    </Link>
+    </div>
   );
 }
 
