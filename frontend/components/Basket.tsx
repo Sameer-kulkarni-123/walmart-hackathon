@@ -3,14 +3,18 @@ import { getCartTotal } from "@/lib/getCartTotal";
 import { groupBySKU } from "@/lib/groupBySKU";
 import { useCartStore } from "@/store";
 import Image from "next/image";
-import React from "react";
+import React, { useState } from "react";
 import AddToCart from "./AddToCart";
 import { Button } from "./ui/button";
+import { Product } from "@/typings/productTypings";
+import HowToUseSidebar from "./HowToUseSidebar";
 
 function Basket() {
   const cart = useCartStore((state) => state.cart);
   const grouped = groupBySKU(cart);
   const basketTotal = getCartTotal(cart);
+  const [howToUseOpen, setHowToUseOpen] = useState(false);
+  const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
 
   return (
     <div className="max-w-7xl mx-auto px-4">
@@ -46,6 +50,16 @@ function Basket() {
                 <p className="font-bold text-right text-lg md:mt-4">
                   {total}
                 </p>
+                <Button
+                  variant="outline"
+                  className="mt-2 border-walmart text-walmart hover:bg-walmart/10"
+                  onClick={() => {
+                    setSelectedProduct(item as Product);
+                    setHowToUseOpen(true);
+                  }}
+                >
+                  How to Use?
+                </Button>
               </div>
             </li>
           );
@@ -60,6 +74,11 @@ function Basket() {
           Checkout
         </Button>
       </div>
+      <HowToUseSidebar
+        isOpen={howToUseOpen}
+        onClose={() => setHowToUseOpen(false)}
+        product={selectedProduct}
+      />
     </div>
   );
 }
