@@ -8,6 +8,7 @@ import AddToCart from "./AddToCart";
 import { Button } from "./ui/button";
 import { Product } from "@/typings/productTypings";
 import HowToUseSidebar from "./HowToUseSidebar";
+import AllergyCheckButton from "./AllergyCheckButton";
 
 function Basket() {
   const cart = useCartStore((state) => state.cart);
@@ -39,6 +40,7 @@ function Basket() {
                 )}
                 <div>
                   <p className="line-clamp-2 font-bold">{item.title}</p>
+                  <AllergyCheckButton productTitle={item.title} productDescription={item.description} />
                   <div
                     dangerouslySetInnerHTML={{ __html: item.description }}
                     className="line-clamp-1 font-light text-sm mt-2"

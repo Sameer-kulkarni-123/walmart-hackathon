@@ -56,6 +56,33 @@ ACT LIKE A WALMART EXPERT. Provide only Walmart items and make it feel like a pe
 
 YOU ARE GEMINI – POWERED BY ADVANCED AI – BUT YOU REPRESENT WALMART ONLY.`;
 
+// Utility: Detect and extract allergies from a message
+function extractAllergies(message: string): string[] {
+  // Simple regex for statements like "I am allergic to X", "I'm allergic to peanuts", "Allergic to X"
+  const allergyRegex = /(?:i\s*['’]?m|i\s*am|allergic\s*to|i\s*have\s*an?\s*allergy\s*to)\s+([^.,;\n]+)/gi;
+  const matches: string[] = [];
+  let match;
+  while ((match = allergyRegex.exec(message.toLowerCase()))) {
+    // Split by 'and', 'or', ',' to support multiple allergies in one statement
+    match[1].split(/,| and | or /).forEach((a) => {
+      const allergy = a.trim();
+      if (allergy && !matches.includes(allergy)) matches.push(allergy);
+    });
+  }
+  return matches;
+}
+
+function updateAllergiesInLocalStorage(newAllergies: string[]) {
+  if (!newAllergies.length) return;
+  const key = 'walmart-ai-allergies';
+  let stored = [];
+  try {
+    stored = JSON.parse(localStorage.getItem(key) || '[]');
+  } catch {}
+  const updated = Array.from(new Set([...stored, ...newAllergies]));
+  localStorage.setItem(key, JSON.stringify(updated));
+}
+
 const ChatSidePanel: React.FC<ChatSidePanelProps> = ({ isOpen, onClose }) => {
   const [messages, setMessages] = useState<Message[]>([
     { text: "Hi Wally!", sender: "user" },
@@ -63,6 +90,8 @@ const ChatSidePanel: React.FC<ChatSidePanelProps> = ({ isOpen, onClose }) => {
   const [input, setInput] = useState<string>("");
   const [listening, setListening] = useState<boolean>(false);
   const recognitionRef = useRef<any>(null);
+
+  const GEMINI_API_KEY = process.env.NEXT_PUBLIC_GEMINI_API_KEY || "";
 
   // Gemini API call
   const fetchGeminiResponse = async (userMessage: string) => {
@@ -73,7 +102,7 @@ const ChatSidePanel: React.FC<ChatSidePanelProps> = ({ isOpen, onClose }) => {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
-            "X-goog-api-key": "AIzaSyCldPlHrXsPyOLDOx1Z-9dwjaUH0bxrRQQ",
+            "X-goog-api-key": GEMINI_API_KEY,
           },
           body: JSON.stringify({
             contents: [
@@ -133,6 +162,9 @@ const ChatSidePanel: React.FC<ChatSidePanelProps> = ({ isOpen, onClose }) => {
   const handleSend = async (msg: string = input) => {
     if (!msg.trim()) return;
     setMessages((prev) => [...prev, { text: msg, sender: "user" }]);
+    // Allergy detection and storage
+    const allergies = extractAllergies(msg);
+    if (allergies.length) updateAllergiesInLocalStorage(allergies);
     setInput("");
     await fetchGeminiResponse(msg);
   };
