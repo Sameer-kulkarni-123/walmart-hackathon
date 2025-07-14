@@ -21,7 +21,7 @@ import AddToCart from "@/components/AddToCart";
 
 type Props = {
   searchParams: {
-    id: string; // product_id passed as query param
+    id: string;
   };
 };
 
@@ -36,9 +36,9 @@ async function ProductPage({ searchParams: { id } }: Props) {
   const breadcrumbs = product.breadcrumbs || [];
 
   return (
-    <div className="p-4 lg:p-10 flex flex-col lg:flex-row w-full">
+    <div className="p-4 lg:p-10 flex flex-col lg:flex-row w-full bg-gradient-to-br from-blue-50 via-white to-purple-50 min-h-screen">
       {/* Sidebar Thumbnails */}
-      <div className="hidden lg:flex flex-col space-y-4">
+      <div className="hidden lg:flex flex-col space-y-4 mr-8">
         {general.images?.map((image, i) => (
           <Image
             key={image + i}
@@ -46,7 +46,7 @@ async function ProductPage({ searchParams: { id } }: Props) {
             alt={`${general.title} ${i}`}
             width={90}
             height={90}
-            className="border rounded-sm"
+            className="border rounded-lg shadow-md hover:scale-105 transition-transform duration-200"
           />
         ))}
       </div>
@@ -60,13 +60,13 @@ async function ProductPage({ searchParams: { id } }: Props) {
           {general.images?.map((image, i) => (
             <CarouselItem key={i}>
               <div className="p-1">
-                <div className="flex aspect-square items-center justify-center p-2 relative">
+                <div className="flex aspect-square items-center justify-center p-2 relative bg-white rounded-xl shadow-lg">
                   <Image
                     src={image}
                     alt={`${general.title} ${i}`}
                     width={400}
                     height={400}
-                    className="object-contain"
+                    className="object-contain rounded-xl"
                   />
                 </div>
               </div>
@@ -78,12 +78,19 @@ async function ProductPage({ searchParams: { id } }: Props) {
       </Carousel>
 
       {/* Product Details */}
-      <div className="flex-1 border rounded-md w-full p-5 space-y-5">
-        <h1 className="text-3xl font-bold">{general.title}</h1>
+      <div className="flex-1 border rounded-2xl w-full p-8 space-y-7 bg-white/80 shadow-xl backdrop-blur-md">
+        <h1 className="text-4xl font-extrabold text-gray-900">
+          {general.title}
+        </h1>
 
         <div className="space-x-2 flex flex-wrap">
           {breadcrumbs.map((breadcrumb: any, i: number) => (
-            <Badge key={i}>{breadcrumb.category_name || breadcrumb}</Badge>
+            <Badge
+              key={i}
+              className="bg-gradient-to-r from-blue-400 to-purple-400 text-white font-semibold px-3 py-1 rounded-full shadow"
+            >
+              {breadcrumb.category_name || breadcrumb}
+            </Badge>
           ))}
         </div>
 
@@ -91,38 +98,51 @@ async function ProductPage({ searchParams: { id } }: Props) {
           dangerouslySetInnerHTML={{
             __html: general.description || "<p>No description available.</p>",
           }}
-          className="py-5 text-gray-700"
+          className="py-5 text-gray-700 text-lg"
         />
 
         {rating && (
-          <p className="text-yellow-500 text-sm">
-            {rating.rating} ★
-            <span className="text-gray-400 ml-2">({rating.count} reviews)</span>
-          </p>
+          <div className="flex items-center space-x-2">
+            <span className="text-yellow-500 text-xl font-bold">
+              {rating.rating} ★
+            </span>
+            <span className="text-gray-500 text-sm">
+              ({rating.count} reviews)
+            </span>
+          </div>
         )}
 
-        <p className="text-2xl font-bold mt-2">
+        <p className="text-3xl font-extrabold mt-2 text-purple-700 drop-shadow">
           {priceInfo.currency} {priceInfo.price}
         </p>
 
         <AddToCart product={product} />
 
-        <hr />
+        <hr className="my-6 border-t-2 border-purple-200" />
 
-        <h3 className="font-bold text-xl pt-10">Specifications</h3>
+        <h3 className="font-bold text-2xl pt-6 text-blue-700">
+          Specifications
+        </h3>
 
-        <Table>
+        <Table className="rounded-lg overflow-hidden shadow-md">
           <TableHeader>
-            <TableRow>
-              <TableHead>Specification</TableHead>
-              <TableHead>Value</TableHead>
+            <TableRow className="bg-gradient-to-r from-blue-100 to-purple-100">
+              <TableHead className="font-bold text-gray-700">
+                Specification
+              </TableHead>
+              <TableHead className="font-bold text-gray-700">Value</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {specs.map((spec: any) => (
-              <TableRow key={spec.key}>
-                <TableCell className="font-bold">{spec.key}</TableCell>
-                <TableCell>{spec.value}</TableCell>
+              <TableRow
+                key={spec.key}
+                className="hover:bg-purple-50 transition-colors"
+              >
+                <TableCell className="font-semibold text-gray-800">
+                  {spec.key}
+                </TableCell>
+                <TableCell className="text-gray-600">{spec.value}</TableCell>
               </TableRow>
             ))}
           </TableBody>
