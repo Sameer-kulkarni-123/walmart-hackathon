@@ -7,40 +7,42 @@ interface HowToUseSidebarProps {
   onClose: () => void;
   product: Product | null;
 }
+function cleanTTS(text: string): string {
+  return text
+    .replace(/\*/g, "")
+    .replace(/\\n/g, ". ")
+    .replace(/e\.g\./gi, "for example")
+    .replace(/i\.e\./gi, "that is")
+    .replace(/&nbsp;/g, " ")
+    .replace(/&amp;/g, "and")
+    .replace(/<[^>]+>/g, "")
+    .replace(/\s+/g, " ")
+    .replace("-", "")
+    .trim();
+}
 
 const speak = (text: string) => {
-  if ("speechSynthesis" in window) {
+    if (!("speechSynthesis" in window)) return;
     const synth = window.speechSynthesis;
-    let voices = synth.getVoices();
-    let selectedVoice = voices.find(
-      (v) =>
-        v.lang === "en-US" &&
-        v.name.toLowerCase().includes("google") &&
-        v.name.toLowerCase().includes("wave")
-    );
-    if (!selectedVoice)
-      selectedVoice = voices.find(
-        (v) => v.lang === "en-US" && v.name.toLowerCase().includes("google")
-      );
-    if (!selectedVoice)
-      selectedVoice = voices.find(
-        (v) => v.lang === "en-US" && v.name.toLowerCase().includes("enhanced")
-      );
-    if (!selectedVoice)
-      selectedVoice = voices.find(
-        (v) => v.lang === "en-US" && v.name.toLowerCase().includes("female")
-      );
-    if (!selectedVoice)
-      selectedVoice = voices.find((v) => v.lang === "en-US");
-    const utter = new window.SpeechSynthesisUtterance(text);
-    utter.lang = "en-US";
-    if (selectedVoice) utter.voice = selectedVoice;
-    utter.rate = 1;
-    utter.pitch = 1.1;
-    utter.volume = 1;
-    synth.speak(utter);
-  }
-};
+    const speakWhenReady = () => {
+      const voices = synth.getVoices();
+      const preferred =
+        voices.find((v) => v.name === "Google US English") ||
+        voices.find((v) => v.lang === "en-US");
+      const utter = new SpeechSynthesisUtterance(cleanTTS(text));
+      utter.voice = preferred || null;
+      utter.rate = 0.95;
+      utter.pitch = 1.05;
+      synth.cancel();
+      synth.speak(utter);
+    };
+    if (synth.getVoices().length === 0) {
+      synth.onvoiceschanged = speakWhenReady;
+    } else {
+      speakWhenReady();
+    }
+  };
+
 
 const HowToUseSidebar: React.FC<HowToUseSidebarProps> = ({ isOpen, onClose, product }) => {
   const [messages, setMessages] = useState<{ text: string; sender: "ai" | "user" }[]>([]);
@@ -56,7 +58,7 @@ const HowToUseSidebar: React.FC<HowToUseSidebarProps> = ({ isOpen, onClose, prod
   const fetchGeminiInstructions = async () => {
     setLoading(true);
     setMessages([]);
-    const prompt = `You are a helpful Walmart assistant. The user has just bought the following product from Walmart.\n\nProduct Name: ${product?.title}\nDescription: ${product?.description}\n\nPlease provide clear, step-by-step instructions on how to use this product after purchase. Make it concise, friendly, and easy to follow. Use bullet points or short steps. Do not include markdown, links, or unnecessary styling. Only provide the instructions.`;
+    const prompt = `You are a helpful Walmart assistant. The user has just bought the following product from Walmart.\n\nProduct Name: ${product?.title}\nDescription: ${product?.description}\n\nPlease provide clear, step-by-step instructions on how to use this product after purchase. Make it concise, friendly, and easy to follow. Use bullet points or short steps. Do not include markdown, links, or unnecessary styling. Only provide the instructions. SMALL AND QUICK IF POSSIBLE.`;
     try {
       const res = await fetch(
         "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent",
@@ -90,15 +92,6 @@ const HowToUseSidebar: React.FC<HowToUseSidebarProps> = ({ isOpen, onClose, prod
     <div className="absolute top-0 right-0 h-full w-full max-w-[30vw] bg-white shadow-2xl z-50 flex flex-col animate-slide-in rounded-l-2xl border-l border-blue-200">
       <div className="flex items-center justify-between p-5 bg-gradient-to-r from-[#e3f0ff] via-[#6ec1e4] to-[#ffe600] rounded-t-2xl">
         <div className="flex items-center gap-2">
-          <img
-            src="https://1000logos.net/wp-content/uploads/2017/05/Walmart-logo.png"
-            alt="Walmart"
-            className="h-7 w-7 drop-shadow bg-white rounded"
-            style={{ objectFit: "contain" }}
-            onError={e => {
-              (e.target as HTMLImageElement).src = "https://upload.wikimedia.org/wikipedia/commons/3/3e/Walmart_logo.svg";
-            }}
-          />
           <h2 className="text-lg font-bold text-black">
             How to Use:{" "}
             <span className="font-normal text-black">{product.title}</span>

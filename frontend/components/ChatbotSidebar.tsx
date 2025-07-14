@@ -41,20 +41,20 @@ EXAMPLE RESPONSE FORMAT:
 User: I wanna go to a Halloween party and dress up as Batman
 AI: Got it! Here’s what you’ll need from Walmart:
 
-Batman Costume Set (Includes Mask + Cape) – ₹1999
+Batman Costume Set (Includes Mask + Cape)  ₹1999
 
-Black Gloves – ₹299
+Black Gloves  ₹299
 
-Halloween Makeup Kit – ₹499
+Halloween Makeup Kit  ₹499
 
-Party Snacks Combo Pack – ₹699
+Party Snacks Combo Pack  ₹699
 
-Glow Sticks (Pack of 12) – ₹199
+Glow Sticks (Pack of 12)  ₹199
 I’ve added these to your cart. Want drinks or decor too?
 
 ACT LIKE A WALMART EXPERT. Provide only Walmart items and make it feel like a personal shopping assistant that’s intuitive, helpful, and fast.
 
-YOU ARE GEMINI – POWERED BY ADVANCED AI – BUT YOU REPRESENT WALMART ONLY.`;
+YOU ARE GEMINI  POWERED BY ADVANCED AI  BUT YOU REPRESENT WALMART ONLY. DO NOT USE ANY ABBREVIATIONS OR SHORTCUTS. DO NOT USE ANY MARKDOWN OR ANY LINKS. `;
 
 // Utility: Detect and extract allergies from a message
 function extractAllergies(message: string): string[] {
@@ -124,38 +124,38 @@ const ChatSidePanel: React.FC<ChatSidePanelProps> = ({ isOpen, onClose }) => {
       ]);
     }
   };
-
+  function cleanTTS(text: string): string {
+  return text
+    .replace(/\*/g, "")
+    .replace(/\\n/g, ". ")
+    .replace(/e\.g\./gi, "for example")
+    .replace(/i\.e\./gi, "that is")
+    .replace(/&nbsp;/g, " ")
+    .replace(/&amp;/g, "and")
+    .replace(/<[^>]+>/g, "")
+    .replace(/\s+/g, " ")
+    .replace("-", "")
+    .trim();
+}
   const speak = (text: string) => {
-    if ("speechSynthesis" in window) {
-      const synth = window.speechSynthesis;
-      let voices = synth.getVoices();
-      let selectedVoice = voices.find(
-        (v) =>
-          v.lang === "en-US" &&
-          v.name.toLowerCase().includes("google") &&
-          v.name.toLowerCase().includes("wave")
-      );
-      if (!selectedVoice)
-        selectedVoice = voices.find(
-          (v) => v.lang === "en-US" && v.name.toLowerCase().includes("google")
-        );
-      if (!selectedVoice)
-        selectedVoice = voices.find(
-          (v) => v.lang === "en-US" && v.name.toLowerCase().includes("enhanced")
-        );
-      if (!selectedVoice)
-        selectedVoice = voices.find(
-          (v) => v.lang === "en-US" && v.name.toLowerCase().includes("female")
-        );
-      if (!selectedVoice)
-        selectedVoice = voices.find((v) => v.lang === "en-US");
-      const utter = new window.SpeechSynthesisUtterance(text);
-      utter.lang = "en-US";
-      if (selectedVoice) utter.voice = selectedVoice;
-      utter.rate = 1;
-      utter.pitch = 1.1;
-      utter.volume = 1;
+    if (!("speechSynthesis" in window)) return;
+    const synth = window.speechSynthesis;
+    const speakWhenReady = () => {
+      const voices = synth.getVoices();
+      const preferred =
+        voices.find((v) => v.name === "Google US English") ||
+        voices.find((v) => v.lang === "en-US");
+      const utter = new SpeechSynthesisUtterance(cleanTTS(text));
+      utter.voice = preferred || null;
+      utter.rate = 0.95;
+      utter.pitch = 1.05;
+      synth.cancel();
       synth.speak(utter);
+    };
+    if (synth.getVoices().length === 0) {
+      synth.onvoiceschanged = speakWhenReady;
+    } else {
+      speakWhenReady();
     }
   };
 
@@ -204,17 +204,9 @@ const ChatSidePanel: React.FC<ChatSidePanelProps> = ({ isOpen, onClose }) => {
     <div className="fixed top-0 right-0 h-full w-full max-w-[30vw] bg-white shadow-2xl z-50 flex flex-col animate-slide-in rounded-l-2xl border-l border-blue-200">
       <div className="flex items-center justify-between p-5 bg-gradient-to-r from-[#e3f0ff] via-[#6ec1e4] to-[#ffe600] rounded-t-2xl">
         <div className="flex items-center gap-2">
-          <img
-            src="https://1000logos.net/wp-content/uploads/2017/05/Walmart-logo.png"
-            alt="Walmart"
-            className="h-7 w-7 drop-shadow bg-white rounded"
-            style={{ objectFit: "contain" }}
-            onError={e => {
-              (e.target as HTMLImageElement).src = "https://upload.wikimedia.org/wikipedia/commons/3/3e/Walmart_logo.svg";
-            }}
-          />
+          
           <h2 className="text-lg font-bold text-black">
-            AI Assistant
+            Wally AI Assistant
           </h2>
         </div>
         <button
