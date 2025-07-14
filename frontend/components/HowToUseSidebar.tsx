@@ -8,6 +8,40 @@ interface HowToUseSidebarProps {
   product: Product | null;
 }
 
+const speak = (text: string) => {
+  if ("speechSynthesis" in window) {
+    const synth = window.speechSynthesis;
+    let voices = synth.getVoices();
+    let selectedVoice = voices.find(
+      (v) =>
+        v.lang === "en-US" &&
+        v.name.toLowerCase().includes("google") &&
+        v.name.toLowerCase().includes("wave")
+    );
+    if (!selectedVoice)
+      selectedVoice = voices.find(
+        (v) => v.lang === "en-US" && v.name.toLowerCase().includes("google")
+      );
+    if (!selectedVoice)
+      selectedVoice = voices.find(
+        (v) => v.lang === "en-US" && v.name.toLowerCase().includes("enhanced")
+      );
+    if (!selectedVoice)
+      selectedVoice = voices.find(
+        (v) => v.lang === "en-US" && v.name.toLowerCase().includes("female")
+      );
+    if (!selectedVoice)
+      selectedVoice = voices.find((v) => v.lang === "en-US");
+    const utter = new window.SpeechSynthesisUtterance(text);
+    utter.lang = "en-US";
+    if (selectedVoice) utter.voice = selectedVoice;
+    utter.rate = 1;
+    utter.pitch = 1.1;
+    utter.volume = 1;
+    synth.speak(utter);
+  }
+};
+
 const HowToUseSidebar: React.FC<HowToUseSidebarProps> = ({ isOpen, onClose, product }) => {
   const [messages, setMessages] = useState<{ text: string; sender: "ai" | "user" }[]>([]);
   const [loading, setLoading] = useState(false);
@@ -24,14 +58,13 @@ const HowToUseSidebar: React.FC<HowToUseSidebarProps> = ({ isOpen, onClose, prod
     setMessages([]);
     const prompt = `You are a helpful Walmart assistant. The user has just bought the following product from Walmart.\n\nProduct Name: ${product?.title}\nDescription: ${product?.description}\n\nPlease provide clear, step-by-step instructions on how to use this product after purchase. Make it concise, friendly, and easy to follow. Use bullet points or short steps. Do not include markdown, links, or unnecessary styling. Only provide the instructions.`;
     try {
-      const GEMINI_API_KEY = process.env.NEXT_PUBLIC_GEMINI_API_KEY || "";
       const res = await fetch(
         "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent",
         {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
-            "X-goog-api-key": GEMINI_API_KEY,
+            "X-goog-api-key": "AIzaSyCldPlHrXsPyOLDOx1Z-9dwjaUH0bxrRQQ",
           },
           body: JSON.stringify({
             contents: [
@@ -90,27 +123,34 @@ const HowToUseSidebar: React.FC<HowToUseSidebarProps> = ({ isOpen, onClose, prod
           </div>
         ) : (
           messages.map((msg, idx) => (
-            <div key={idx} className="mb-4">
-              <span className="block bg-[#f7fafc] shadow px-4 py-3 rounded-xl text-gray-800 text-base leading-relaxed whitespace-pre-line">
+            <div key={idx} className="mb-4 flex justify-start items-center">
+              <span className="block bg-[#f7fafc] shadow px-4 py-3 rounded-xl text-gray-800 text-base leading-relaxed whitespace-pre-line flex-1">
                 <ReactMarkdown>{msg.text.replace(/\\n/g, "\n")}</ReactMarkdown>
               </span>
+              <button
+                className="ml-2 text-[#0071dc] hover:text-[#ffe600] bg-white rounded-full p-2 shadow transition-colors"
+                title="Listen to instructions"
+                onClick={() => speak(msg.text.replace(/\\n/g, "\n"))}
+              >
+                🔊
+              </button>
             </div>
           ))
         )}
       </div>
       <style jsx global>{`
+        .hide-scrollbar {
+          scrollbar-width: none;
+        }
+        .hide-scrollbar::-webkit-scrollbar {
+          display: none;
+        }
         .animate-slide-in {
           animation: slideIn 0.3s cubic-bezier(0.4, 0, 0.6, 1);
         }
         @keyframes slideIn {
           from { transform: translateX(100%); }
           to { transform: translateX(0); }
-        }
-        .hide-scrollbar {
-          scrollbar-width: none; /* Firefox */
-        }
-        .hide-scrollbar::-webkit-scrollbar {
-          display: none; /* Chrome, Safari, Opera */
         }
       `}</style>
     </div>
