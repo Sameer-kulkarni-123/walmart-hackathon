@@ -25,7 +25,7 @@ Only mention Walmart as the source. Do NOT refer to other platforms.
 
 Present items clearly – category + example product names.
 
-All prices must be in Indian Rupees (₹) when applicable.
+All prices must be in USD when applicable.
 
 Use short sentences and bullet points for clarity.
 
@@ -53,13 +53,13 @@ Glow Sticks (Pack of 12)  ₹199
 I’ve added these to your cart. Want drinks or decor too?
 
 ACT LIKE A WALMART EXPERT. Provide only Walmart items and make it feel like a personal shopping assistant that’s intuitive, helpful, and fast.
-
-YOU ARE GEMINI  POWERED BY ADVANCED AI  BUT YOU REPRESENT WALMART ONLY. DO NOT USE ANY ABBREVIATIONS OR SHORTCUTS. DO NOT USE ANY MARKDOWN OR ANY LINKS. `;
+YOU ARE GEMINI  POWERED BY ADVANCED AI  BUT YOU REPRESENT WALMART ONLY. DO NOT USE ANY ABBREVIATIONS OR SHORTCUTS. DO NOT USE ANY MARKDOWN OR ANY LINKS. SAY LESS. BE TO THE POINT MAX 30-40 WORDS.`;
 
 // Utility: Detect and extract allergies from a message
 function extractAllergies(message: string): string[] {
   // Simple regex for statements like "I am allergic to X", "I'm allergic to peanuts", "Allergic to X"
-  const allergyRegex = /(?:i\s*['’]?m|i\s*am|allergic\s*to|i\s*have\s*an?\s*allergy\s*to)\s+([^.,;\n]+)/gi;
+  const allergyRegex =
+    /(?:i\s*['’]?m|i\s*am|allergic\s*to|i\s*have\s*an?\s*allergy\s*to)\s+([^.,;\n]+)/gi;
   const matches: string[] = [];
   let match;
   while ((match = allergyRegex.exec(message.toLowerCase()))) {
@@ -74,10 +74,10 @@ function extractAllergies(message: string): string[] {
 
 function updateAllergiesInLocalStorage(newAllergies: string[]) {
   if (!newAllergies.length) return;
-  const key = 'walmart-ai-allergies';
+  const key = "walmart-ai-allergies";
   let stored = [];
   try {
-    stored = JSON.parse(localStorage.getItem(key) || '[]');
+    stored = JSON.parse(localStorage.getItem(key) || "[]");
   } catch {}
   const updated = Array.from(new Set([...stored, ...newAllergies]));
   localStorage.setItem(key, JSON.stringify(updated));
@@ -97,7 +97,7 @@ const ChatSidePanel: React.FC<ChatSidePanelProps> = ({ isOpen, onClose }) => {
   const fetchGeminiResponse = async (userMessage: string) => {
     try {
       const res = await fetch(
-        "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent",
+        "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent",
         {
           method: "POST",
           headers: {
@@ -125,18 +125,18 @@ const ChatSidePanel: React.FC<ChatSidePanelProps> = ({ isOpen, onClose }) => {
     }
   };
   function cleanTTS(text: string): string {
-  return text
-    .replace(/\*/g, "")
-    .replace(/\\n/g, ". ")
-    .replace(/e\.g\./gi, "for example")
-    .replace(/i\.e\./gi, "that is")
-    .replace(/&nbsp;/g, " ")
-    .replace(/&amp;/g, "and")
-    .replace(/<[^>]+>/g, "")
-    .replace(/\s+/g, " ")
-    .replace("-", "")
-    .trim();
-}
+    return text
+      .replace(/\*/g, "")
+      .replace(/\\n/g, ". ")
+      .replace(/e\.g\./gi, "for example")
+      .replace(/i\.e\./gi, "that is")
+      .replace(/&nbsp;/g, " ")
+      .replace(/&amp;/g, "and")
+      .replace(/<[^>]+>/g, "")
+      .replace(/\s+/g, " ")
+      .replace("-", "")
+      .trim();
+  }
   const speak = (text: string) => {
     if (!("speechSynthesis" in window)) return;
     const synth = window.speechSynthesis;
@@ -156,6 +156,12 @@ const ChatSidePanel: React.FC<ChatSidePanelProps> = ({ isOpen, onClose }) => {
       synth.onvoiceschanged = speakWhenReady;
     } else {
       speakWhenReady();
+    }
+  };
+
+  const stopSpeech = () => {
+    if ("speechSynthesis" in window) {
+      window.speechSynthesis.cancel();
     }
   };
 
@@ -204,10 +210,8 @@ const ChatSidePanel: React.FC<ChatSidePanelProps> = ({ isOpen, onClose }) => {
     <div className="fixed top-0 right-0 h-full w-full max-w-[30vw] bg-white shadow-2xl z-50 flex flex-col animate-slide-in rounded-l-2xl border-l border-blue-200">
       <div className="flex items-center justify-between p-5 bg-gradient-to-r from-[#e3f0ff] via-[#6ec1e4] to-[#ffe600] rounded-t-2xl">
         <div className="flex items-center gap-2">
-          
-          <h2 className="text-lg font-bold text-black">
-            Wally AI Assistant
-          </h2>
+          <h2 className="text-lg font-bold text-black">Wally AI Assistant</h2>
+          <button onClick={stopSpeech}>🔇</button>
         </div>
         <button
           onClick={onClose}
@@ -219,8 +223,17 @@ const ChatSidePanel: React.FC<ChatSidePanelProps> = ({ isOpen, onClose }) => {
       </div>
       <div className="flex-1 p-6 overflow-y-auto bg-white hide-scrollbar">
         {messages.map((msg, idx) => (
-          <div key={idx} className={`mb-4 flex ${msg.sender === "user" ? "justify-end" : "justify-start"}`}>
-            <span className={`block bg-[#f7fafc] shadow px-4 py-3 rounded-xl text-gray-800 text-base leading-relaxed whitespace-pre-line ${msg.sender === "user" ? "bg-blue-100 text-blue-800" : ""}`}>
+          <div
+            key={idx}
+            className={`mb-4 flex ${
+              msg.sender === "user" ? "justify-end" : "justify-start"
+            }`}
+          >
+            <span
+              className={`block bg-[#f7fafc] shadow px-4 py-3 rounded-xl text-gray-800 text-base leading-relaxed whitespace-pre-line ${
+                msg.sender === "user" ? "bg-blue-100 text-blue-800" : ""
+              }`}
+            >
               <ReactMarkdown>{msg.text.replace(/\\n/g, "\n")}</ReactMarkdown>
             </span>
           </div>
@@ -233,21 +246,44 @@ const ChatSidePanel: React.FC<ChatSidePanelProps> = ({ isOpen, onClose }) => {
           placeholder="Type your message..."
           value={input}
           onChange={(e) => setInput(e.target.value)}
-          onKeyDown={(e) => { if (e.key === "Enter") handleSend(); }}
+          onKeyDown={(e) => {
+            if (e.key === "Enter") handleSend();
+          }}
         />
         <button
-          className={`bg-gray-200 text-black px-3 py-2 border-l border-r ${listening ? "animate-pulse" : ""}`}
+          className={`bg-gray-200 text-black px-3 py-2 border-l border-r ${
+            listening ? "animate-pulse" : ""
+          }`}
           style={{ borderRadius: 0 }}
           title={listening ? "Listening..." : "Speak"}
           onClick={handleMicClick}
           disabled={listening}
         >
-          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-6 h-6">
-            <path strokeLinecap="round" strokeLinejoin="round" d="M12 18v3m0 0h-3m3 0h3m-3-3a6 6 0 006-6V9a6 6 0 10-12 0v3a6 6 0 006 6z" />
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            fill="none"
+            viewBox="0 0 24 24"
+            strokeWidth={2}
+            stroke="currentColor"
+            className="w-6 h-6"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              d="M12 18v3m0 0h-3m3 0h3m-3-3a6 6 0 006-6V9a6 6 0 10-12 0v3a6 6 0 006 6z"
+            />
           </svg>
-          {listening && <span className="ml-1 font-semibold animate-pulse">Listening...</span>}
+          {listening && (
+            <span className="ml-1 font-semibold animate-pulse">
+              Listening...
+            </span>
+          )}
         </button>
-        <button className="bg-[#0071dc] text-white px-4 py-2 rounded-r" onClick={() => handleSend()} disabled={listening}>
+        <button
+          className="bg-[#0071dc] text-white px-4 py-2 rounded-r"
+          onClick={() => handleSend()}
+          disabled={listening}
+        >
           Send
         </button>
       </div>

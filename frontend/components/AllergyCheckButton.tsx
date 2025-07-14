@@ -56,9 +56,9 @@ const AllergyCheckButton: React.FC<AllergyCheckButtonProps> = ({ productTitle, p
   if (status === "loading")
     return <button className="mt-2 w-full bg-gray-200 text-gray-700 rounded px-2 py-1 cursor-not-allowed animate-pulse" disabled>Checking allergies...</button>;
   if (status === "allergic")
-    return <button className="mt-2 w-full bg-red-600 text-white rounded px-2 py-1 cursor-not-allowed font-bold" disabled>⚠️ Contains your allergen!</button>;
+    return <button className="mt-2 w-full bg-red-600 text-white rounded px-2 py-1 cursor-not-allowed font-bold" disabled> Contains your allergen!</button>;
   if (status === "safe")
-    return <button className="mt-2 w-full bg-green-600 text-white rounded px-2 py-1 cursor-not-allowed font-bold" disabled>✅ No known allergens for you</button>;
+    return <button className="mt-2 w-full bg-green-600 text-white rounded px-2 py-1 cursor-not-allowed font-bold" disabled>No known allergens for you</button>;
   return null;
 };
 
